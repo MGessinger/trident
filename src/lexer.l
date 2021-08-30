@@ -3,10 +3,11 @@
 	#define YY_NO_UNPUT
 	#include <string.h>
 	#include "parser.h"
+	#define YY_USER_ACTION { yylloc.first_line = yylineno; }
 %}
 %option yylineno
 
-NAME	[[:alnum:]_.-]+
+NAME	[[:alnum:]_.][[:alnum:]_.-]*
 FILE	(\/?({NAME}\/)*)?{NAME}
 
 IDENT	[[:alpha:]_][[:alnum:]_]*
@@ -25,7 +26,7 @@ FILE		return keyword_file;
 
 {IDENT}		{ yylval.string = strndup(yytext, yyleng); return token_ident; }
 {FILE}		{ yylval.string = strndup(yytext, yyleng); return token_file; }
-{ANY}+		{ yylval.string = strndup(yytext, yyleng); return token_any; }
+(--?)?{ANY}+	{ yylval.string = strndup(yytext, yyleng); return token_any; }
 %%
 int yywrap ()
 {

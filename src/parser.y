@@ -2,6 +2,12 @@
 	#include <stdio.h>
 	extern int yylex();
 	static int yyerror();
+
+	const char * filename = "stdin";
+	#define ERROR(str, loc) { \
+		fprintf(stderr, "%s:%i:0: Syntax Error: %s!\n", filename, loc.first_line, str);\
+		YYERROR;\
+	}
 %}
 
 %union
@@ -17,22 +23,27 @@
 %%
 INPUT   : 
 	| INPUT JOB				{ printf("Finished reading a JOB.\n"); }
+	| INPUT error				{ ERROR("Malformed JOB", @2); }
 	;
 
 JOB : JOB_HEAD COMMAND 
     | JOB_HEAD COMMAND TARGETS
+    | JOB_HEAD error				{ ERROR("Missing command", @2); }
     ;
 
 JOB_HEAD : keyword_job token_ident		{ printf("Began reading a JOB: %s\n", $2); free($2); }
+	 | keyword_job error			{ ERROR("Missing job name", @2); }
 	 ;
 
-COMMAND : keyword_cmd token_file		{ printf("Read a command: %s\n", $2); free($2); }
+COMMAND : COMMAND token_any			{ printf("Additional argument: %s\n", $2); free($2); }
+	| keyword_cmd token_file		{ printf("Read a command: %s\n", $2); free($2); }
 	| keyword_cmd token_ident		{ printf("Read a command: %s\n", $2); free($2); }
-	| COMMAND token_any			{ printf("Additional argument: %s\n", $2); free($2); }
+	| keyword_cmd error			{ ERROR("Missing command name", @2); }
 	;
 
 TARGETS : keyword_out '-' TARGET		{ printf("Read a target.\n"); }
 	| TARGETS '-' TARGET
+	| TARGETS '-' error			{ ERROR("Invalid Target", @2); }
 	;
 
 TARGET : keyword_job token_ident		{ free($2); }
@@ -41,6 +52,8 @@ TARGET : keyword_job token_ident		{ free($2); }
        | keyword_job REGEX token_ident		{ free($3); }
        | keyword_file REGEX token_file		{ free($3); }
        | keyword_file REGEX token_ident		{ free($3); }
+       | keyword_job REGEX error		{ ERROR("Missing target job name", @3); }
+       | keyword_file REGEX error		{ ERROR("Missing target file name", @3); }
        ;
 
 REGEX : token_any			{ printf("Read a \"regex\": /%s/\n", $1); free($1); }
