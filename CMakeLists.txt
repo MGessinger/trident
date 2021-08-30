@@ -10,8 +10,14 @@ BISON_TARGET(parser src/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c
 FLEX_TARGET(lexer src/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c)
 ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 
+# Set the target and include my own directories
+include_directories(src ${CMAKE_CURRENT_BINARY_DIR})
+
 set(multipipe_src
 	src/child_process.c
+	src/targets.c
+	src/command.c
+	src/jobs.c
 	src/main.c
 )
 
