@@ -1,7 +1,16 @@
 #include "child_process.h"
 
+extern int yylex_destroy();
+extern int yyparse();
+extern FILE *yyin;
+
 int main (int argc, char **argv)
 {
+	yyin = stdin;
+	yyparse();
+	yylex_destroy();
+	return 0;
+
 	if (argc <= 1)
 	{
 		fprintf(stderr, "USAGE: multipipe CMD [ARGS]\n");
