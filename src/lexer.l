@@ -12,7 +12,7 @@ FILE	(\/?({NAME}\/)*)?{NAME}
 
 IDENT	[[:alpha:]_][[:alnum:]_]*
 
-ANY	[^[:space:]]|\\[[:space:]]
+ANY	[^[:space:]/]|\\[[:space:]/]
 %%
 "#".*\n		|
 [[:space:]]	
@@ -24,9 +24,11 @@ FILE		return keyword_file;
 
 "-"		return yytext[0];
 
+"/"{ANY}+"/"	{ yylval.string = strndup(yytext + 1, yyleng - 2); return token_regex; }
+
 {IDENT}		{ yylval.string = strndup(yytext, yyleng); return token_ident; }
 {FILE}		{ yylval.string = strndup(yytext, yyleng); return token_file; }
-(--?)?{ANY}+	{ yylval.string = strndup(yytext, yyleng); return token_any; }
+{ANY}+		{ yylval.string = strndup(yytext, yyleng); return token_any; }
 %%
 int yywrap ()
 {
