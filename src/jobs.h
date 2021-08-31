@@ -14,7 +14,6 @@ typedef struct {
 extern job_t ** jobsStack;
 
 job_t * newJob (char * name, command_t * cmd, targets_t * targets);
-void executeJob (job_t * job, int inputFD);
 void clearJob (job_t * job);
 
 #endif /* JOBS_H_ */

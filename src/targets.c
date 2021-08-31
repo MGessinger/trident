@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "targets.h"
 
 target_t * newSingleTarget (char * name, target_type type)
@@ -9,6 +10,8 @@ target_t * newSingleTarget (char * name, target_type type)
 
 	T->name = name;
 	T->type = type;
+	T->file = -1;
+	T->filter = NULL;
 }
 
 target_t * addFilter (target_t * T, regex_t * filter)
@@ -45,8 +48,7 @@ targets_t * newTargets (target_t * T)
 	{
 		free(Ts);
 		free(T);
-		perror("alloc");
-		fprintf(stderr, "Failed to allocate targets array.\n");
+		perror("newTargets: alloc");
 		return NULL;
 	}
 	Ts->targets[0] = *T;
@@ -69,6 +71,7 @@ targets_t * appendTarget (targets_t * Ts, target_t * T)
 		Ts->targets = realloc(Ts->targets, Ts->alloc * 2 * sizeof(target_t));
 		if (Ts->targets = NULL)
 		{
+			perror("appendTarget: realloc");
 			free(Ts);
 			return NULL;
 		}

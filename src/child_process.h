@@ -1,10 +1,8 @@
 #ifndef CHILD_PROCESS_H_
 #define CHILD_PROCESS_H_
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
+#include "jobs.h"
 
-int create_child_process (int * parent_io, int argc, char * const argv[]);
+void executeJob (job_t * job, int inputFD);
 
 #endif /* CHILD_PROCESS_H_ */

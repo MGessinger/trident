@@ -1,7 +1,9 @@
 %{
 	#include <stdio.h>
-	#include <unistd.h>
+	#include "targets.h"
+	#include "command.h"
 	#include "jobs.h"
+	#include "child_process.h"
 	extern int yylex();
 	static int yyerror();
 	regex_t * compileRegex (char * string);
@@ -23,11 +25,11 @@
 %token token_file token_ident token_regex token_any
 
 %type <string> token_file token_ident token_any token_regex
-%type <string> JOB_HEAD
+%type <string> JOB_HEAD LOCATION
 %type <pointer> JOB COMMAND TARGETS TARGET REGEX
 %%
 INPUT : %empty
-      | INPUT JOB				{ executeJob($2, STDIN_FILENO); clearJob($2); }
+      | INPUT JOB				{ executeJob($2, 0); clearJob($2); }
       | INPUT error				{ ERROR("Malformed JOB", @2); }
       ;
 
@@ -41,8 +43,8 @@ JOB_HEAD : keyword_job token_ident		{ $$ = $2; }
 	 ;
 
 COMMAND : COMMAND token_any			{ $$ = appendArgument($1, $2); }
-	| keyword_cmd token_file		{ $$ = newCommand($2); }
-	| keyword_cmd token_ident		{ $$ = newCommand($2); }
+	| COMMAND LOCATION			{ $$ = appendArgument($1, $2); }
+	| keyword_cmd LOCATION			{ $$ = newCommand($2); }
 	| keyword_cmd error			{ $$ = NULL; ERROR("Missing command name", @2); }
 	;
 
@@ -52,8 +54,7 @@ TARGETS : keyword_out '-' TARGET		{ $$ = newTargets($3); }
 	;
 
 TARGET : keyword_job token_ident		{ $$ = newSingleTarget($2, TARGET_JOB); }
-       | keyword_file token_file		{ $$ = newSingleTarget($2, TARGET_FILE); }
-       | keyword_file token_ident		{ $$ = newSingleTarget($2, TARGET_FILE); }
+       | keyword_file LOCATION			{ $$ = newSingleTarget($2, TARGET_FILE); }
        | keyword_job error			{ $$ = NULL; ERROR("Missing target job name", @2); }
        | keyword_file error			{ $$ = NULL; ERROR("Missing target file name", @2); }
        | REGEX TARGET				{ $$ = addFilter($2, $1); }
@@ -61,6 +62,8 @@ TARGET : keyword_job token_ident		{ $$ = newSingleTarget($2, TARGET_JOB); }
 
 REGEX : token_regex				{ $$ = compileRegex($1); if($$ == NULL) YYERROR; }
       ;
+
+LOCATION : token_file | token_ident ;
 %%
 regex_t * compileRegex (char * string)
 {

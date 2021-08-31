@@ -4,33 +4,59 @@
 	#include <string.h>
 	#include "parser.h"
 	#define YY_USER_ACTION { yylloc.first_line = yylineno; }
+	char * unescape (char * string, size_t len);
 %}
 %option yylineno
 
 NAME	[[:alnum:]_.][[:alnum:]_.-]*
-FILE	(\/?({NAME}\/)*)?{NAME}
+FILE	([^[:space:]!$'&*()+]|(\\[[:space:]!$'&*()+]))+
 
 IDENT	[[:alpha:]_][[:alnum:]_]*
 
 ANY	[^[:space:]/]|\\[[:space:]/]
+STRING	([^\"]|\\\")+
 %%
-"#".*\n		|
-[[:space:]]	
+"#".*\n			|
+[[:space:]]		
 
-JOB		return keyword_job;
-CMD		return keyword_cmd;
-OUT		return keyword_out;
-FILE		return keyword_file;
+JOB			return keyword_job;
+CMD			return keyword_cmd;
+OUT			return keyword_out;
+FILE			return keyword_file;
 
-"-"		return yytext[0];
+"-"			return yytext[0];
+"/"{ANY}+"/"		{ yylval.string = strndup(yytext + 1, yyleng - 2); return token_regex; }
+"\""{STRING}"\""	{ yylval.string = unescape(yytext + 1, yyleng - 2); return token_any; }
 
-"/"{ANY}+"/"	{ yylval.string = strndup(yytext + 1, yyleng - 2); return token_regex; }
+{IDENT}			{ yylval.string = strndup(yytext, yyleng); return token_ident; }
+{FILE}			{ yylval.string = unescape(yytext, yyleng); return token_file; }
 
-{IDENT}		{ yylval.string = strndup(yytext, yyleng); return token_ident; }
-{FILE}		{ yylval.string = strndup(yytext, yyleng); return token_file; }
-{ANY}+		{ yylval.string = strndup(yytext, yyleng); return token_any; }
+{ANY}+			{ yylval.string = unescape(yytext, yyleng); return token_any; }
 %%
 int yywrap ()
 {
 	return 1;
+}
+
+char * unescape (char * string, size_t len)
+{
+	size_t i, j;
+	char * out;
+
+	i = j = 0;
+	out = malloc((len + 1) * sizeof(char));
+	if (out == NULL)
+		return NULL;
+
+	while (i < len)
+	{
+		if (string[i] == '\\')
+			i++;
+
+		out[j] = string[i];
+		i++;
+		j++;
+	}
+	out[j] = '\0';
+	return out;
 }

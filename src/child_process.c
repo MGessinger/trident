@@ -1,6 +1,13 @@
-#include "child_process.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <regex.h>
+#include "child_process.h"
+
+#define TYPE (O_RDWR | O_CREAT | O_TRUNC)
+#define MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 
 static inline int is_valid_fd (int fd)
 {
@@ -53,4 +60,96 @@ int create_child_process (int * parent_io, int argc, char * const argv[])
 		*parent_io = from_child[0];
 		return EXIT_SUCCESS;
 	}
+}
+
+void startTargets (targets_t * Ts)
+{
+	target_t * T;
+	job_t * targetJob;
+	int variableFD[2];
+
+	for (int i = 0; i < Ts->length; i++)
+	{
+		T = Ts->targets + i;
+		if (T->type == TARGET_JOB)
+		{
+			targetJob = NULL; /* Implement findJobOnStack (char * name) */
+			if (pipe(variableFD) != 0)
+			{
+				perror("pipe");
+				T->file = -1;
+				continue;
+			}
+			executeJob(targetJob, variableFD[0]);
+			T->file = variableFD[1];
+		}
+		else
+		{
+			T->file = open(T->name, TYPE, MODE);
+			if (!is_valid_fd(T->file))
+				perror(T->name);
+		}
+	}
+}
+
+void runDistributor (targets_t * Ts, int inputFD)
+{
+	target_t T;
+	FILE * nonstdout;
+	char * line = NULL;
+	size_t length = 0;
+	ssize_t bytes;
+	int match;
+
+	nonstdout = fdopen(inputFD, "r");
+	if (nonstdout == NULL)
+		return;
+
+	bytes = getline(&line, &length, nonstdout);
+	while (bytes > 0)
+	{
+		for (int i = 0; i < Ts->length; i++)
+		{
+			T = Ts->targets[i];
+			if (!is_valid_fd(T.file))
+			{
+				fprintf(stderr, "Invalid file handle: %i\n", T.file);
+				continue;
+			}
+			if (T.filter == NULL)
+				match = !REG_NOMATCH;
+			else
+				match = regexec(T.filter, line, 0, NULL, REG_NOTEOL);
+			if (match != REG_NOMATCH)
+				write(T.file, line, bytes);
+		}
+		bytes = getline(&line, &length, nonstdout);
+	}
+	int EOT = 0x04;
+	for (int i = 0; i < Ts->length; i++)
+	{
+		T = Ts->targets[i];
+		if (!is_valid_fd(T.file))
+			continue;
+		if (T.type == TARGET_FILE)
+			close(T.file);
+		else
+			write(T.file, &EOT, 4);
+	}
+
+	free(line);
+	fclose(nonstdout);
+}
+
+void executeJob (job_t * job, int fd)
+{
+	if (job == NULL)
+		return;
+
+	FILE * nonstdout;
+
+	create_child_process(&fd, job->argc, job->argv);
+
+	startTargets(job->targets);
+	runDistributor(job->targets, fd);
 }

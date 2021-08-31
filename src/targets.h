@@ -2,7 +2,6 @@
 #define TARGETS_H_
 
 #include <regex.h>
-#include <stdlib.h>
 
 typedef enum {
 	TARGET_FILE,
@@ -10,6 +9,7 @@ typedef enum {
 } target_type;
 
 typedef struct {
+	int file;
 	char * name;
 	regex_t * filter;
 	target_type type;
