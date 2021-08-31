@@ -9,6 +9,7 @@
 	regex_t * compileRegex (char * string);
 
 	const char * filename = "stdin";
+	extern stack_t stack;
 	#define ERROR(str, loc) { \
 		fprintf(stderr, "%s:%i:0: Syntax Error: %s!\n", filename, loc.first_line, str);\
 		YYERROR;\
@@ -29,7 +30,7 @@
 %type <pointer> JOB COMMAND TARGETS TARGET REGEX
 %%
 INPUT : %empty
-      | INPUT JOB				{ executeJob($2, 0); clearJob($2); }
+      | INPUT JOB				{ stack = push(stack, $2); }
       | INPUT error				{ ERROR("Malformed JOB", @2); }
       ;
 

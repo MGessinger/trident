@@ -9,6 +9,8 @@
 #define TYPE (O_RDWR | O_CREAT | O_TRUNC)
 #define MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 
+extern stack_t stack;
+
 static inline int is_valid_fd (int fd)
 {
 	return fcntl(fd, F_GETFL) != -1 || errno != EBADF;
@@ -21,7 +23,7 @@ int create_child_process (int * parent_io, int argc, char * const argv[])
 	/* Create the output. */
 	if (pipe(from_child) == -1)
 	{
-		fprintf(stderr, "Creation of Pipe failed.\n");
+		perror("pipe");
 		return EXIT_FAILURE;
 	}
 
@@ -33,7 +35,7 @@ int create_child_process (int * parent_io, int argc, char * const argv[])
 		close(from_child[0]);
 		close(from_child[1]);
 		*parent_io = -1;
-		perror("Fork failed.\n");
+		perror("fork");
 		return EXIT_FAILURE;
 	}
 	else if (f == 0)
@@ -73,15 +75,36 @@ void startTargets (targets_t * Ts)
 		T = Ts->targets + i;
 		if (T->type == TARGET_JOB)
 		{
-			targetJob = NULL; /* Implement findJobOnStack (char * name) */
-			if (pipe(variableFD) != 0)
+			targetJob = query(T->name, stack);
+			if (targetJob == NULL)
 			{
-				perror("pipe");
+				fprintf(stderr, "Invalid name: No job with the name %s. Skipping Target.\n", T->name);
 				T->file = -1;
 				continue;
 			}
-			executeJob(targetJob, variableFD[0]);
-			T->file = variableFD[1];
+			if (pipe(variableFD) != 0)
+			{
+				perror("startTargets: pipe");
+				T->file = -1;
+				continue;
+			}
+			int f = fork();
+			if (f < 0)
+			{
+				perror("startTargets: fork");
+				continue;
+			}
+			else if (f == 0)
+			{
+				close(variableFD[1]);
+				executeJob(targetJob, variableFD[0]);
+				return;
+			}
+			else
+			{
+				close(variableFD[0]);
+				T->file = variableFD[1];
+			}
 		}
 		else
 		{
@@ -94,7 +117,7 @@ void startTargets (targets_t * Ts)
 
 void runDistributor (targets_t * Ts, int inputFD)
 {
-	target_t T;
+	target_t * T;
 	FILE * nonstdout;
 	char * line = NULL;
 	size_t length = 0;
@@ -110,31 +133,25 @@ void runDistributor (targets_t * Ts, int inputFD)
 	{
 		for (int i = 0; i < Ts->length; i++)
 		{
-			T = Ts->targets[i];
-			if (!is_valid_fd(T.file))
-			{
-				fprintf(stderr, "Invalid file handle: %i\n", T.file);
+			T = Ts->targets + i;
+			match = 0;
+			if (!is_valid_fd(T->file))
 				continue;
-			}
-			if (T.filter == NULL)
-				match = !REG_NOMATCH;
-			else
-				match = regexec(T.filter, line, 0, NULL, REG_NOTEOL);
-			if (match != REG_NOMATCH)
-				write(T.file, line, bytes);
+			if (T->filter != NULL)
+				match = regexec(T->filter, line, 0, NULL, REG_NOTEOL);
+
+			if (match == 0)
+				write(T->file, line, bytes);
 		}
 		bytes = getline(&line, &length, nonstdout);
 	}
-	int EOT = 0x04;
 	for (int i = 0; i < Ts->length; i++)
 	{
-		T = Ts->targets[i];
-		if (!is_valid_fd(T.file))
+		T = Ts->targets + i;
+		if (!is_valid_fd(T->file))
 			continue;
-		if (T.type == TARGET_FILE)
-			close(T.file);
-		else
-			write(T.file, &EOT, 4);
+		close(T->file);
+		T->file = -1;
 	}
 
 	free(line);
@@ -145,8 +162,6 @@ void executeJob (job_t * job, int fd)
 {
 	if (job == NULL)
 		return;
-
-	FILE * nonstdout;
 
 	create_child_process(&fd, job->argc, job->argv);
 

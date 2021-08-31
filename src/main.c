@@ -1,9 +1,13 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
+#include "child_process.h"
 #include "parser.h"
+#include "jobs.h"
 
 extern int yylex_destroy();
 extern FILE *yyin;
+
+stack_t stack;
 
 void printUsage ()
 {
@@ -15,8 +19,14 @@ void printUsage ()
 
 int main (int argc, char **argv)
 {
+	stack = init();
 	yyin = stdin;
+
 	yyparse();
+	executeJob(stack.data[0], STDIN_FILENO);
+
 	yylex_destroy();
+	clear(stack);
+
 	return 0;
 }
