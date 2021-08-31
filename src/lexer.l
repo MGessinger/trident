@@ -8,13 +8,10 @@
 %}
 %option yylineno
 
-NAME	[[:alnum:]_.][[:alnum:]_.-]*
+IDENT	[[:alpha:]_][[:alnum:]_]*
 FILE	([^[:space:]!$'&*()+]|(\\[[:space:]!$'&*()+]))+
 
-IDENT	[[:alpha:]_][[:alnum:]_]*
-
-ANY	[^[:space:]/]|\\[[:space:]/]
-STRING	([^\"]|\\\")+
+ANY	[^[:space:]]|\\[[:space:]]
 %%
 "#".*\n			|
 [[:space:]]		
@@ -25,8 +22,8 @@ OUT			return keyword_out;
 FILE			return keyword_file;
 
 "-"			return yytext[0];
-"/"{ANY}+"/"		{ yylval.string = strndup(yytext + 1, yyleng - 2); return token_regex; }
-"\""{STRING}"\""	{ yylval.string = unescape(yytext + 1, yyleng - 2); return token_any; }
+"/"([^\/]|\\\/)+"/"	{ yylval.string = strndup(yytext + 1, yyleng - 2); return token_regex; }
+"\""([^\"]|\\\")+"\""	{ yylval.string = unescape(yytext + 1, yyleng - 2); return token_any; }
 
 {IDENT}			{ yylval.string = strndup(yytext, yyleng); return token_ident; }
 {FILE}			{ yylval.string = unescape(yytext, yyleng); return token_file; }
