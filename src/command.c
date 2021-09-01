@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "command.h"
 
 command_t * newCommand (char * name)

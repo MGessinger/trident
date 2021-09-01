@@ -12,11 +12,11 @@ stack_t stack;
 
 void printUsage ()
 {
-	fprintf(stderr, "USAGE: trident [OPTIONS] FILE[S]\n\n");
-	fprintf(stderr, "Read trident jobs from FILE. If more than one file is specified, all of them are read as one continuous input stream.\n\n");
-	fprintf(stderr, "Options:\n\n");
-	fprintf(stderr, "\t-s JOBNAME\t\tRun the job named JOBNAME as the intial job, instead of the first one in the input file.\n");
-	fprintf(stderr, "\t\t\t\tIf more than one start job is specified, the last one takes precedence.\n");
+	fprintf(stderr, "USAGE: trident [OPTIONS] FILE[S]\n");
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "   -s JOBNAME\t\tRun the job named JOBNAME as the intial job,\n\t\t\tinstead of the first one in the input file.\n");
+	fprintf(stderr, "\t\t\tIf more than one start job is specified,\n\t\t\tthe last one takes precedence.\n");
+	fprintf(stderr, "\nRead Trident jobs from one or more input files. If more than one file is specified, they are read as one long, continuous input file.\n");
 }
 
 int main (int argc, char **argv)
@@ -28,7 +28,7 @@ int main (int argc, char **argv)
 	if (argc <= 1)
 	{
 		printUsage();
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	stack = init();
@@ -56,6 +56,7 @@ int main (int argc, char **argv)
 			case 'h':
 			case '?':
 				printUsage();
+				clear(stack);
 				return 0;
 			default:
 				fprintf(stderr, "Unrecognized option: %s", argv[i]);
@@ -65,7 +66,7 @@ int main (int argc, char **argv)
 	if (any == 0)
 	{
 		printUsage();
-		return EXIT_FAILURE;
+		return -1;
 	}
 	yylex_destroy();
 

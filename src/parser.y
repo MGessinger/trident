@@ -1,5 +1,6 @@
 %{
 	#include <stdio.h>
+	#include <regex.h>
 	#include "targets.h"
 	#include "command.h"
 	#include "jobs.h"

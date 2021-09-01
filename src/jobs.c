@@ -67,7 +67,7 @@ job_t * query (char * name, stack_t in)
 {
 	if (in.data == NULL)
 		return NULL;
-	
+
 	for (int i = 0; i < in.depth; i++)
 	{
 		if (strcmp(name, in.data[i]->name) == 0)

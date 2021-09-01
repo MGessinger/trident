@@ -61,7 +61,7 @@ targets_t * newTargets (target_t * T)
 targets_t * appendTarget (targets_t * Ts, target_t * T)
 {
 	if (Ts->targets == NULL)
-		fprintf(stderr, "Passed NULL to appendTarget.\n");
+		return Ts;
 	Ts->targets[Ts->length] = *T;
 	Ts->length ++;
 	free(T);

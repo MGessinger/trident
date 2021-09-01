@@ -1,8 +1,8 @@
 %{
-	#define YY_NO_INPUT
-	#define YY_NO_UNPUT
 	#include <string.h>
 	#include "parser.h"
+	#define YY_NO_INPUT
+	#define YY_NO_UNPUT
 	#define YY_USER_ACTION { yylloc.first_line = yylineno; }
 	char * unescape (char * string, size_t len);
 %}
@@ -24,6 +24,7 @@ FILE			return keyword_file;
 "-"			return yytext[0];
 "/"([^\/]|\\\/)+"/"	{ yylval.string = strndup(yytext + 1, yyleng - 2); return token_regex; }
 "\""([^\"]|\\\")+"\""	{ yylval.string = unescape(yytext + 1, yyleng - 2); return token_any; }
+"\'"([^\']|\\\')+"\'"	{ yylval.string = unescape(yytext + 1, yyleng - 2); return token_any; }
 
 {IDENT}			{ yylval.string = strndup(yytext, yyleng); return token_ident; }
 {FILE}			{ yylval.string = unescape(yytext, yyleng); return token_file; }
