@@ -46,8 +46,10 @@ JOB_HEAD : keyword_job token_ident		{ $$ = $2; }
 
 COMMAND : COMMAND token_any			{ $$ = appendArgument($1, $2); }
 	| COMMAND LOCATION			{ $$ = appendArgument($1, $2); }
+	| COMMAND token_regex			{ $$ = appendArgument($1, $2); }
 	| keyword_cmd LOCATION			{ $$ = newCommand($2); }
 	| keyword_cmd error			{ $$ = NULL; ERROR("Missing command name", @2); }
+	| COMMAND '-'				{ clearCommand($1); ERROR("Enclose '-' in a string", @2); }
 	;
 
 TARGETS : keyword_out '-' TARGET		{ $$ = newTargets($3); }

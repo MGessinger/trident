@@ -70,13 +70,21 @@ int main (int argc, char **argv)
 	}
 	yylex_destroy();
 
-	startJob = stack.data[0];
 	if (startName != NULL)
 	{
 		startJob = query(startName, stack);
 		if (startJob == NULL)
 			fprintf(stderr, "No job found with name %s\n", startName);
 	}
+	else if (stack.depth == 0)
+	{
+		startJob = NULL;
+	}
+	else
+	{
+		startJob = stack.data[0];
+	}
+
 	if (startJob != NULL)
 		executeJob(startJob, STDIN_FILENO);
 

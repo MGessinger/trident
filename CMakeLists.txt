@@ -18,7 +18,11 @@ set(trident_src
 	src/targets.c
 	src/command.c
 	src/jobs.c
-	src/main.c
 )
 
-add_executable(trident ${trident_src} ${BISON_parser_OUTPUTS} ${FLEX_lexer_OUTPUTS})
+add_library(compiler ${trident_src})
+
+add_library(parser ${BISON_parser_OUTPUTS} ${FLEX_lexer_OUTPUTS})
+
+add_executable(trident src/main.c)
+target_link_libraries(trident parser compiler)
