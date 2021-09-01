@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <string.h>
 #include <regex.h>
 #include "child_process.h"
 
@@ -108,7 +109,13 @@ void startTargets (targets_t * Ts)
 		}
 		else
 		{
-			T->file = open(T->name, TYPE, MODE);
+			if (strncmp(T->name, "stdout", 6) == 0)
+				T->file = STDOUT_FILENO;
+			else if (strncmp(T->name, "stderr", 6) == 0)
+				T->file = STDERR_FILENO;
+			else
+				T->file = open(T->name, TYPE, MODE);
+
 			if (!is_valid_fd(T->file))
 				perror(T->name);
 		}

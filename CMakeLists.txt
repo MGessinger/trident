@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(Multipipe LANGUAGES C VERSION 0.1 DESCRIPTION "A functional language to connect one process to multiple pipes.")
+project(trident LANGUAGES C VERSION 0.1 DESCRIPTION "A functional language to connect one process to multiple pipes.")
 
 # Add Bison and Flex to the project and set their targets
 find_package(FLEX REQUIRED)
@@ -13,7 +13,7 @@ ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 # Set the target and include my own directories
 include_directories(src ${CMAKE_CURRENT_BINARY_DIR})
 
-set(multipipe_src
+set(trident_src
 	src/child_process.c
 	src/targets.c
 	src/command.c
@@ -21,4 +21,4 @@ set(multipipe_src
 	src/main.c
 )
 
-add_executable(multipipe ${multipipe_src} ${BISON_parser_OUTPUTS} ${FLEX_lexer_OUTPUTS})
+add_executable(trident ${trident_src} ${BISON_parser_OUTPUTS} ${FLEX_lexer_OUTPUTS})
