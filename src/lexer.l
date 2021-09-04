@@ -21,7 +21,9 @@ CMD			return keyword_cmd;
 OUT			return keyword_out;
 FILE			return keyword_file;
 
+"!"			|
 "-"			return yytext[0];
+
 "/"([^\/]|\\\/)+"/"	{ yylval.string = strndup(yytext + 1, yyleng - 2); return token_regex; }
 "\""([^\"]|\\\")+"\""	{ yylval.string = unescape(yytext + 1, yyleng - 2); return token_any; }
 "\'"([^\']|\\\')+"\'"	{ yylval.string = unescape(yytext + 1, yyleng - 2); return token_any; }

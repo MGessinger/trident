@@ -14,7 +14,7 @@ target_t * newSingleTarget (char * name, target_type type)
 	T->filter = NULL;
 }
 
-target_t * addFilter (target_t * T, regex_t * filter)
+target_t * addFilter (target_t * T, regex_t * filter, int invert)
 {
 	if (T == NULL)
 	{
@@ -23,6 +23,7 @@ target_t * addFilter (target_t * T, regex_t * filter)
 	}
 
 	T->filter = filter;
+	T->invert = invert;
 	return T;
 }
 

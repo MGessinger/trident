@@ -9,10 +9,11 @@ typedef enum {
 } target_type;
 
 typedef struct {
-	int file;
 	char * name;
-	regex_t * filter;
 	target_type type;
+	regex_t * filter;
+	int invert;
+	int file;
 } target_t;
 
 typedef struct {
@@ -22,7 +23,7 @@ typedef struct {
 } targets_t;
 
 target_t * newSingleTarget (char * name, target_type type);
-target_t * addFilter (target_t * T, regex_t * filter);
+target_t * addFilter (target_t * T, regex_t * filter, int invert);
 
 targets_t * newTargets (target_t * T);
 targets_t * appendTarget (targets_t * Ts, target_t * T);

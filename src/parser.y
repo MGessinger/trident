@@ -8,6 +8,7 @@
 	extern int yylex();
 	static int yyerror();
 	regex_t * compileRegex (char * string);
+	char * toString (char c);
 
 	const char * filename = "stdin";
 	extern stack_t stack;
@@ -27,7 +28,7 @@
 %token token_file token_ident token_regex token_any
 
 %type <string> token_file token_ident token_any token_regex
-%type <string> JOB_HEAD LOCATION
+%type <string> JOB_HEAD LOCATION SPECIAL
 %type <pointer> JOB COMMAND TARGETS TARGET REGEX
 %%
 INPUT : %empty
@@ -45,11 +46,11 @@ JOB_HEAD : keyword_job token_ident		{ $$ = $2; }
 	 ;
 
 COMMAND : COMMAND token_any			{ $$ = appendArgument($1, $2); }
-	| COMMAND LOCATION			{ $$ = appendArgument($1, $2); }
 	| COMMAND token_regex			{ $$ = appendArgument($1, $2); }
+	| COMMAND LOCATION			{ $$ = appendArgument($1, $2); }
+	| COMMAND SPECIAL			{ $$ = appendArgument($1, $2); }
 	| keyword_cmd LOCATION			{ $$ = newCommand($2); }
 	| keyword_cmd error			{ $$ = NULL; ERROR("Missing command name", @2); }
-	| COMMAND '-'				{ clearCommand($1); ERROR("Enclose '-' in a string", @2); }
 	;
 
 TARGETS : keyword_out '-' TARGET		{ $$ = newTargets($3); }
@@ -61,13 +62,18 @@ TARGET : keyword_job token_ident		{ $$ = newSingleTarget($2, TARGET_JOB); }
        | keyword_file LOCATION			{ $$ = newSingleTarget($2, TARGET_FILE); }
        | keyword_job error			{ $$ = NULL; ERROR("Missing target job name", @2); }
        | keyword_file error			{ $$ = NULL; ERROR("Missing target file name", @2); }
-       | REGEX TARGET				{ $$ = addFilter($2, $1); }
+       | REGEX TARGET				{ $$ = addFilter($2, $1, 0); }
+       | '!' REGEX TARGET			{ $$ = addFilter($3, $2, 1); }
        ;
 
 REGEX : token_regex				{ $$ = compileRegex($1); if($$ == NULL) YYERROR; }
       ;
 
 LOCATION : token_file | token_ident ;
+
+SPECIAL : '-' 					{ $$ = toString('-'); }
+	| '!'					{ $$ = toString('!'); }
+	;
 %%
 regex_t * compileRegex (char * string)
 {
@@ -86,6 +92,16 @@ regex_t * compileRegex (char * string)
 		return NULL;
 	}
 	return r;
+}
+
+char * toString (char c)
+{
+	char * s = malloc(2*sizeof(char));
+	if (s == NULL)
+		return NULL;
+	s[0] = c;
+	s[1] = '\0';
+	return s;
 }
 
 int yyerror()

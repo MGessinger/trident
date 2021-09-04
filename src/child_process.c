@@ -141,13 +141,15 @@ void runDistributor (targets_t * Ts, int inputFD)
 		for (int i = 0; i < Ts->length; i++)
 		{
 			T = Ts->targets + i;
-			match = 0;
+			match = 1;
 			if (!is_valid_fd(T->file))
 				continue;
 			if (T->filter != NULL)
-				match = regexec(T->filter, line, 0, NULL, REG_NOTEOL);
+				match = (regexec(T->filter, line, 0, NULL, REG_NOTEOL) != REG_NOMATCH);
+			if (T->invert)
+				match = !match;
 
-			if (match == 0)
+			if (match)
 				write(T->file, line, bytes);
 		}
 		bytes = getline(&line, &length, nonstdout);
