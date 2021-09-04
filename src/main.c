@@ -16,6 +16,7 @@ void printUsage ()
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "   -s JOBNAME\t\tRun the job named JOBNAME as the intial job,\n\t\t\tinstead of the first one in the input file.\n");
 	fprintf(stderr, "\t\t\tIf more than one start job is specified,\n\t\t\tthe last one takes precedence.\n");
+	fprintf(stderr, "   -h\t\t\tPrint this usage info and exit.\n");
 	fprintf(stderr, "\nRead Trident jobs from one or more input files. If more than one file is specified, they are read as one long, continuous input file.\n");
 }
 
