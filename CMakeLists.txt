@@ -26,3 +26,5 @@ add_library(parser ${BISON_parser_OUTPUTS} ${FLEX_lexer_OUTPUTS})
 
 add_executable(trident src/main.c)
 target_link_libraries(trident parser compiler)
+
+install(TARGETS trident)

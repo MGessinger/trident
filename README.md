@@ -46,3 +46,19 @@ After parsing all input files, by default trident executes the first job defined
 ```Trident
 ./trident example.tr -s count_lines
 ```
+
+## Compilation
+
+Trident uses Flex and Bison/Yacc for parsing input, so both of those need to be installed.
+
+This respoitory uses CMake as its build system, so to compile trident simply run
+```bash
+mkdir build
+cd build
+cmake ..
+make -j
+```
+After finishing the compilation, an executable file called *trident* will be created in the directory *build*. If you want to install the program system-wide, additionally run
+```
+sudo make install
+```

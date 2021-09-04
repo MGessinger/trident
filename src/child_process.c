@@ -150,7 +150,10 @@ void runDistributor (targets_t * Ts, int inputFD)
 				match = !match;
 
 			if (match)
-				write(T->file, line, bytes);
+			{
+				if (write(T->file, line, bytes) == -1)
+					perror("write");
+			}
 		}
 		bytes = getline(&line, &length, nonstdout);
 	}
