@@ -53,7 +53,7 @@ int create_child_process (int * parent_io, int argc, char * const argv[])
 		args[argc] = NULL;
 
 		execvp(args[0], args);
-
+		perror("execvp");
 		return EXIT_FAILURE;
 	}
 	else
@@ -146,10 +146,8 @@ void runDistributor (targets_t * Ts, int inputFD)
 				continue;
 			if (T->filter != NULL)
 				match = (regexec(T->filter, line, 0, NULL, REG_NOTEOL) != REG_NOMATCH);
-			if (T->invert)
-				match = !match;
 
-			if (match)
+			if (match ^ T->invert)
 			{
 				if (write(T->file, line, bytes) == -1)
 					perror("write");

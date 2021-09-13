@@ -12,6 +12,9 @@ target_t * newSingleTarget (char * name, target_type type)
 	T->type = type;
 	T->file = -1;
 	T->filter = NULL;
+	T->invert = 0;
+
+	return T;
 }
 
 target_t * addFilter (target_t * T, regex_t * filter, int invert)
@@ -70,7 +73,7 @@ targets_t * appendTarget (targets_t * Ts, target_t * T)
 	if (Ts->length == Ts->alloc)
 	{
 		Ts->targets = realloc(Ts->targets, Ts->alloc * 2 * sizeof(target_t));
-		if (Ts->targets = NULL)
+		if (Ts->targets == NULL)
 		{
 			perror("appendTarget: realloc");
 			free(Ts);
