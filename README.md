@@ -30,6 +30,7 @@ A sightly more sophisticated example might read URLs and store the associated IP
 ```Trident
 JOB repeat
 CMD cat
+OUT
 	- /^\([0-9]\{1,3\}.\)\{3\}[0-9]\{1,3\}$/ FILE ips.dat
 	- /\w/ JOB query_dns
 
